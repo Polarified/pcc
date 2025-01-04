@@ -3,7 +3,29 @@
 #include <string.h>
 #include <unistd.h>
 
+    int preprocess_file(const char *input_file, const char *suffix) {
+        // Generate preprocessed file name
+        char preprocessed_file[256];
+        snprintf(preprocessed_file, sizeof(preprocessed_file), "%s", input_file);
+        preprocessed_file[strlen(preprocessed_file) - 2] = '\0';  // Remove `.c`
+        snprintf(preprocessed_file + strlen(preprocessed_file), sizeof(preprocessed_file) - strlen(preprocessed_file), "%s", suffix);
+
+        char command[512];
+        snprintf(command, sizeof(command), "gcc -E -P %s -o %s", input_file, preprocessed_file);
+
+        int ret = system(command);
+        if (ret != 0) {
+            fprintf(stderr, "Error: Failed to preprocess %s\n", input_file);
+            remove(preprocessed_file);  // Clean up preprocessed file
+            return 1;
+        }
+
+        return 0;
+    }
+
 int main(int argc, char *argv[]) {
+    int ret = 0;
+
     if (argc != 2) {
         fprintf(stderr, "Usage: %s <source-file>\n", argv[0]);
         return 1;
@@ -14,6 +36,12 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Error: Input file must have a .c extension\n");
         return 1;
     }
+
+    ret = preprocess_file(input_file, ".i");
+    if (ret != 0) {
+        return 1;
+    }
+
 
     // Generate assembly file name
     char asm_file[256];
@@ -39,7 +67,7 @@ int main(int argc, char *argv[]) {
     char command[512];
     snprintf(command, sizeof(command), "gcc -o %s %s", executable_file, input_file);
 
-    int ret = system(command);
+    ret = system(command);
     if (ret != 0) {
         fprintf(stderr, "Error: Failed to compile %s\n", input_file);
         remove(asm_file);  // Clean up assembly file
