@@ -17,7 +17,9 @@ int main(int argc, char *argv[]) {
 
     // Generate assembly file name
     char asm_file[256];
-    snprintf(asm_file, sizeof(asm_file), "%s.s", input_file);
+    snprintf(asm_file, sizeof(asm_file), "%s", input_file);
+    asm_file[strlen(asm_file) - 2] = '\0';  // Remove `.c`
+    snprintf(asm_file + strlen(asm_file), sizeof(asm_file) - strlen(asm_file), ".s");
 
     // Generate executable file name
     char executable_file[256];
