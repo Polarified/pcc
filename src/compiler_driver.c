@@ -67,15 +67,41 @@ int compile_and_link(const char *input_file, const char *suffix) {
     return 0;
 }
 
+int process_flags(int argc, char *argv[], int *lex_flag, int *parse_flag, int *code_gen_flag) {
+        if (argc == 3) {
+            if (strcmp(argv[2], "--lex") == 0) {
+                *lex_flag = 1;
+            } else if (strcmp(argv[2], "--parse") == 0) {
+                *parse_flag = 1;
+            } else if (strcmp(argv[2], "--codegen") == 0) {
+                *code_gen_flag = 1;
+            } else {
+                fprintf(stderr, "Error: Unknown flag %s\n", argv[2]);
+                return 1;
+            }
+
+            if ((*lex_flag + *parse_flag + *code_gen_flag) > 1) {
+                fprintf(stderr, "Error: Only one of --lex, --parse, or --codegen can be specified\n");
+                return 1;
+            }
+        }
+        return 0;
+    }
+
 int main(int argc, char *argv[]) {
-    if (argc != 2) {
-        fprintf(stderr, "Usage: %s <source-file>\n", argv[0]);
+    if (argc < 2 || argc > 3) {
+        fprintf(stderr, "Usage: %s <source-file> [--lex|--parse|--codegen]\n", argv[0]);
         return 1;
     }
 
     const char *input_file = argv[1];
     if (!has_c_extension(input_file)) {
         fprintf(stderr, "Error: Input file must have a .c extension\n");
+        return 1;
+    }
+
+    int lex_flag = 0, parse_flag = 0, code_gen_flag = 0;
+    if (process_flags(argc, argv, &lex_flag, &parse_flag, &code_gen_flag) != 0) {
         return 1;
     }
 
